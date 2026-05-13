@@ -86,12 +86,12 @@ style.innerHTML = `
 }
 
     .result-card h2{
-        margin - bottom:20px;
+        margin-bottom:20px;
     font-size:20px;
 }
 
     .result-card ul{
-        list - style:none;
+        list-style:none;
     max-height:300px;
     overflow:auto;
 }
@@ -111,6 +111,59 @@ let following = [];
 let hashtags = [];
 let followRequests = [];
 let recentlyUnfollowed = [];
+let restrictedProfiles = [];
+
+//extract values
+function extractValues(data) {
+
+    let result = [];
+
+    function scan(obj) {
+
+        if (Array.isArray(obj)) {
+
+            obj.forEach(scan);
+
+        }
+
+        else if (obj && typeof obj === 'object') {
+
+            //followers
+            if (
+                typeof obj.value === 'string' &&
+                obj.value.trim() !== ''
+            ) {
+
+                result.push(obj.value);
+
+            }
+
+            //following
+            if (
+                typeof obj.title === 'string' &&
+                obj.title.trim() !== '' &&
+                obj.string_list_data
+            ) {
+
+                result.push(obj.title);
+
+            }
+
+            for (const key in obj) {
+
+                scan(obj[key]);
+
+            }
+
+        }
+
+    }
+
+    scan(data);
+
+    return [...new Set(result)];
+
+}
 
 uploadButton.addEventListener('click', async () => {
 
@@ -136,80 +189,64 @@ uploadButton.addEventListener('click', async () => {
         const name = file.name.toLowerCase();
 
         //followers
-        if (name === 'followers_1.json') {
+        if (name.includes('followers')) {
 
-            followers = json.map(item => {
-                return item.string_list_data?.[0]?.value;
-            }).filter(Boolean);
+            followers.push(...extractValues(json));
 
         }
 
         //hashtags
-        else if (name === 'following_hashtags.json') {
+        else if (name.includes('hashtag')) {
 
-            const hashtagData =
-                json.relationships_following_hashtags ||
-                json;
-
-            hashtags = hashtagData.map(item => {
-                return item.string_list_data?.[0]?.value;
-            }).filter(Boolean);
+            hashtags.push(...extractValues(json));
 
         }
 
         //following
-        else if (name === 'following.json') {
+        else if (
+            name.includes('following') &&
+            !name.includes('hashtag')
+        ) {
 
-            const followingData =
-                json.relationships_following ||
-                json;
-
-            following = followingData.map(item => {
-                return item.string_list_data?.[0]?.value;
-            }).filter(Boolean);
+            following.push(...extractValues(json));
 
         }
 
-        //recent follow req
-        else if (name === 'recent_follow_requests.json') {
+        //recent follow requests
+        else if (
+            name.includes('follow_requests')
+        ) {
 
-            const requestData =
-                json.relationships_permanent_follow_requests ||
-                json;
+            followRequests.push(...extractValues(json));
+        }
 
-            followRequests = requestData.map(item => {
-                return item.string_list_data?.[0]?.value;
-            }).filter(Boolean);
+        //recently unfollowed
+        else if (
+            name.includes('unfollow')
+        ) {
+
+            recentlyUnfollowed.push(...extractValues(json));
 
         }
 
-        //recently unfoll
-        else if (name === 'recently_unfollowed_profiles.json') {
+        //restricted
+        else if (
+            name.includes('restricted')
+        ) {
 
-            const unfollowedData =
-                json.relationships_unfollowed_users ||
-                json;
-
-            recentlyUnfollowed = unfollowedData.map(item => {
-                return item.string_list_data?.[0]?.value;
-            }).filter(Boolean);
-
-        }
-
-        //restricted profiles
-        else if (name === 'restricted_profiles.json') {
-
-            const restrictedData =
-                json.relationships_restricted_users ||
-                json;
-
-            restrictedProfiles = restrictedData.map(item => {
-                return item.string_list_data?.[0]?.value;
-            }).filter(Boolean);
+            restrictedProfiles.push(...extractValues(json));
 
         }
 
     }
+    followers = [...new Set(followers)];
+    following = [...new Set(following)];
+    hashtags = [...new Set(hashtags)];
+    followRequests = [...new Set(followRequests)];
+    recentlyUnfollowed = [...new Set(recentlyUnfollowed)];
+    restrictedProfiles = [...new Set(restrictedProfiles)];
+    console.log('followers', followers);
+    console.log('following', following);
 
     //not following back
     const notFollowingBack = following.filter(user => {
