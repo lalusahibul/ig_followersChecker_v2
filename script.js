@@ -245,8 +245,6 @@ uploadButton.addEventListener('click', async () => {
     followRequests = [...new Set(followRequests)];
     recentlyUnfollowed = [...new Set(recentlyUnfollowed)];
     restrictedProfiles = [...new Set(restrictedProfiles)];
-    console.log('followers', followers);
-    console.log('following', following);
 
     //not following back
     const notFollowingBack = following.filter(user => {
@@ -338,6 +336,7 @@ function renderList(elementId, data) {
 const sound1 = new Audio('sound/hey-antek-antek-asing-prabowo.mp3');
 const sound2 = new Audio('sound/jokowi-saya-akan-lawan.mp3');
 const clickmeBtn = document.getElementById('clickme-btn');
+const tutorialBtn = document.getElementById('how-to-download-data');
 
 let clickCount = 0;
 
@@ -360,5 +359,10 @@ clickmeBtn.addEventListener('click', (e) => {
         sound2.play();
 
     }
+
+});
+tutorialBtn.addEventListener('click', (e) => {
+
+    window.open('https://www.youtube.com/shorts/q3xR3eR4cnQ', '_blank');
 
 });
